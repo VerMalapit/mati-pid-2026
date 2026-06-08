@@ -1058,52 +1058,48 @@ function submitForm() {
 
 // ── IFRAME SUBMISSION (avoids CORS, allows reading response) ──
 function submitViaIframe(payload, callback) {
-  // Create hidden iframe to receive response
-  const iframeName = 'mati_submit_frame_' + Date.now();
+  const iframeName = 'mati_frame_' + Date.now();
   const iframe = document.createElement('iframe');
   iframe.name = iframeName;
   iframe.style.display = 'none';
   document.body.appendChild(iframe);
 
-  // Create hidden form
+  // Build hidden form
   const form = document.createElement('form');
   form.method = 'POST';
   form.action = SCRIPT_URL;
   form.target = iframeName;
-
-  // Append all fields
   for (const [k, v] of Object.entries(payload)) {
     const input = document.createElement('input');
-    input.type  = 'hidden';
-    input.name  = k;
-    input.value = v;
+    input.type = 'hidden'; input.name = k; input.value = v;
     form.appendChild(input);
   }
   document.body.appendChild(form);
 
-  // Listen for iframe load (script response arrives)
   let responded = false;
+  let loadCount = 0; // iframe fires onload once on creation (blank), once on response
+
   iframe.onload = function() {
+    loadCount++;
+    // First load is the blank iframe — ignore it, wait for the real response
+    if (loadCount < 2) return;
     if (responded) return;
     responded = true;
     try {
-      const text = iframe.contentDocument
-        ? iframe.contentDocument.body.innerText
-        : iframe.contentWindow.document.body.innerText;
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      const text = doc.body ? doc.body.innerText : doc.body.textContent;
       const data = JSON.parse(text);
       callback(data);
     } catch(err) {
-      // Parse failed — fall back gracefully
+      // Could not parse — fall through to afterSubmit anyway
       callback({ status: 'error', message: err.toString() });
     }
-    // Cleanup
     setTimeout(() => {
-      document.body.removeChild(form);
-      document.body.removeChild(iframe);
+      try { document.body.removeChild(form); document.body.removeChild(iframe); } catch(e){}
     }, 1000);
   };
 
-  // Timeout fallback after 8 seconds
+  // Timeout safety net — 10 seconds
   setTimeout(() => {
     if (!responded) {
       responded = true;
@@ -1112,7 +1108,7 @@ function submitViaIframe(payload, callback) {
         try { document.body.removeChild(form); document.body.removeChild(iframe); } catch(e){}
       }, 500);
     }
-  }, 8000);
+  }, 10000);
 
   form.submit();
 }

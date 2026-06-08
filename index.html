@@ -905,7 +905,7 @@ function submitForm() {
       ok &= v('s-pemail','e-s-pemail', isEmail);
     }
     phone = document.getElementById('s-phone').value.trim().replace(/\s/g,'');
-    if (phones.includes(phone)) { document.getElementById('dupe-s').classList.add('show'); return; }
+    if (phones.includes(phone)) { showDuplicateScreen(); return; }
   }
 
   if (who === 'self' && mode === 'ref') {
@@ -917,7 +917,7 @@ function submitForm() {
     ok &= v('rf-phone','e-rf-phone', isPhone);
     ok &= v('rf-prog','e-rf-prog', x => x !== '');
     phone = document.getElementById('r-phone').value.trim().replace(/\s/g,'');
-    if (phones.includes(phone)) { document.getElementById('dupe-r').classList.add('show'); return; }
+    if (phones.includes(phone)) { showDuplicateScreen(); return; }
   }
 
   if (who === 'parent' && mode === 'self') {
@@ -928,7 +928,7 @@ function submitForm() {
     ok &= v('p-cyear','e-p-cyear', x => x !== '');
     ok &= v('p-prog','e-p-prog', x => x !== '');
     phone = document.getElementById('p-phone').value.trim().replace(/\s/g,'');
-    if (phones.includes(phone)) { document.getElementById('dupe-p').classList.add('show'); return; }
+    if (phones.includes(phone)) { showDuplicateScreen(); return; }
   }
 
   if (who === 'parent' && mode === 'ref') {
@@ -940,7 +940,7 @@ function submitForm() {
     ok &= v('prf-cphone','e-prf-cphone', isPhone);
     ok &= v('prf-prog','e-prf-prog', x => x !== '');
     phone = document.getElementById('pr-phone').value.trim().replace(/\s/g,'');
-    if (phones.includes(phone)) { document.getElementById('dupe-pr').classList.add('show'); return; }
+    if (phones.includes(phone)) { showDuplicateScreen(); return; }
   }
 
   ok &= vCheck('f-consent','e-consent');
@@ -1049,25 +1049,25 @@ function submitForm() {
     mode
   };
 
-  submitViaIframe(payload, function(response) {
-    document.getElementById('loader').classList.remove('show');
+  // Send to Google Sheets — fire and forget (no-cors)
+  // Duplicate gating is handled client-side via localStorage
+  // which is reliable for a single-day booth event
+  const fd = new FormData();
+  fd.append('primary', JSON.stringify(primary));
+  if (friendRec) fd.append('friend', JSON.stringify(friendRec));
+  fd.append('token', SECRET_TOKEN);
+  fd.append('who', who);
+  fd.append('mode', mode);
 
-    if (response.status === 'ok') {
-      // Saved successfully — proceed to wheel
-      afterSubmit(
-        primary.enrolleeName || primary.guardianName || primary.referrerName,
-        response.raffleCode,
-        phone
-      );
-    } else if (response.status === 'duplicate') {
-      // Already registered — show duplicate screen, do NOT proceed to wheel
-      showDuplicateScreen();
-    } else {
-      // Timeout or script error — show a try again message, do NOT proceed to wheel
-      // We cannot verify the entry was saved so we must not award a prize
-      showErrorScreen();
-    }
-  });
+  fetch(SCRIPT_URL, { method:'POST', body:fd, mode:'no-cors' })
+    .catch(err => console.warn('MATI: fetch error', err));
+
+  // Proceed immediately — data is sent, lock the phone locally
+  document.getElementById('loader').classList.remove('show');
+  afterSubmit(
+    primary.enrolleeName || primary.guardianName || primary.referrerName,
+    phone
+  );
 }
 
 function showDuplicateScreen() {
@@ -1079,92 +1079,14 @@ function showDuplicateScreen() {
   document.getElementById('backBtn').classList.remove('show');
 }
 
-function showErrorScreen() {
-  const cur = document.querySelector('.screen.active');
-  if (cur) { cur.classList.add('exit'); setTimeout(() => cur.classList.remove('active','exit'), 300); }
-  const s = document.getElementById('s-error');
-  s.classList.add('active');
-  s.querySelectorAll('.anim').forEach(el => { el.style.animation='none'; el.offsetHeight; el.style.animation=''; });
-  document.getElementById('backBtn').classList.remove('show');
-}
-
-// ── IFRAME SUBMISSION (avoids CORS, allows reading response) ──
-function submitViaIframe(payload, callback) {
-  const iframeName = 'mati_frame_' + Date.now();
-  const iframe = document.createElement('iframe');
-  iframe.name = iframeName;
-  iframe.style.display = 'none';
-  document.body.appendChild(iframe);
-
-  // Build hidden form
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = SCRIPT_URL;
-  form.target = iframeName;
-  for (const [k, v] of Object.entries(payload)) {
-    const input = document.createElement('input');
-    input.type = 'hidden'; input.name = k; input.value = v;
-    form.appendChild(input);
-  }
-  document.body.appendChild(form);
-
-  let responded = false;
-
-  // Timeout safety net — if no response in 10s, fall through anyway
-  const timeout = setTimeout(() => {
-    if (responded) return;
-    responded = true;
-    console.warn('MATI: script timeout — proceeding with fallback code');
-    callback({ status: 'timeout' });
-    cleanup();
-  }, 10000);
-
-  function cleanup() {
-    setTimeout(() => {
-      try { document.body.removeChild(form); } catch(e){}
-      try { document.body.removeChild(iframe); } catch(e){}
-    }, 500);
-  }
-
-  // Attach onload AFTER submit so it only fires for the real response
-  form.submit();
-
-  // Small delay before attaching onload — ensures we don't catch the
-  // initial blank-page load that some browsers fire before the response
-  setTimeout(() => {
-    iframe.onload = function() {
-      if (responded) return;
-      responded = true;
-      clearTimeout(timeout);
-      try {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        const raw = (doc.body.innerText || doc.body.textContent || '').trim();
-        // Strip any HTML tags in case the response is wrapped
-        const json = raw.replace(/<[^>]+>/g, '').trim();
-        const data = JSON.parse(json);
-        console.log('MATI response:', data);
-        callback(data);
-      } catch(err) {
-        console.warn('MATI: parse error —', err.toString());
-        callback({ status: 'error', message: err.toString() });
-      }
-      cleanup();
-    };
-  }, 200);
-}
-
 function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 
-function afterSubmit(name, code, phone) {
+function afterSubmit(name, phone) {
   phones.push(phone);
   localStorage.setItem('mati_phones', JSON.stringify(phones));
   localStorage.setItem('mati_count', String(count));
-  document.getElementById('loader').classList.remove('show');
-  // Pre-fill result screen with server-generated code
   const firstName = (name || 'Friend').split(' ')[0];
   document.getElementById('rName').textContent = firstName + '!';
-
-  // Draw wheel and go
   drawWheel(0);
   wheelSpun = false;
   document.getElementById('spinBtn').disabled = false;

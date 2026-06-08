@@ -931,7 +931,7 @@ function submitForm() {
 
   // Build primary record using universal column structure:
   // enrollee first → guardian → referrer → admin fields
-  const primary = { timestamp:ts, raffleCode:code, who, mode, interest };
+  const primary = { timestamp:ts, who, mode, interest };
   let friendRec = null;
 
   if (who==='self' && mode==='self') {

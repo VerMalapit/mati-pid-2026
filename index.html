@@ -213,16 +213,7 @@ body{height:100%;background:var(--black);color:var(--white);font-family:'Barlow'
 .pr-lbl{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .pr-prize{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;text-transform:uppercase;color:var(--red)}
 .pr-sub{font-size:12px;color:var(--muted);margin-top:4px}
-.ticket{margin:0 auto 16px;background:var(--card);
-  border:2px dashed rgba(232,24,27,.4);border-radius:18px;
-  padding:20px;position:relative;overflow:hidden}
-.ticket::before,.ticket::after{content:'';position:absolute;width:20px;height:20px;
-  background:var(--black);border-radius:50%;top:50%;transform:translateY(-50%)}
-.ticket::before{left:-11px}.ticket::after{right:-11px}
-.t-lbl{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-.t-code{font-family:'Barlow Condensed',sans-serif;font-size:46px;font-weight:900;
-  letter-spacing:4px;color:var(--red);line-height:1}
-.t-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
 .follow-box{background:var(--card);border-radius:16px;padding:16px;margin-bottom:18px}
 .fb-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;
   text-transform:uppercase;margin-bottom:12px}
@@ -656,18 +647,14 @@ body{height:100%;background:var(--black);color:var(--white);font-family:'Barlow'
     <div class="r-burst anim a1">🎉</div>
     <div class="r-tag anim a2">Congratulations!</div>
     <div class="r-name anim a3" id="rName"></div>
-    <div class="r-sub anim a4">You've been entered into the tablet raffle!<br>Screenshot your ticket below.</div>
+    <div class="r-sub anim a4">You've been entered into the tablet raffle!<br>Follow us on social media to see if you win.</div>
     <div class="prize-reveal anim a5">
       <div class="pr-lbl">🎁 You won an instant prize!</div>
       <div class="pr-prize" id="rPrize"></div>
       <div class="pr-sub">Claim your prize at the MATI booth</div>
     </div>
-    <div class="ticket anim a6">
-      <div class="t-lbl">Raffle Ticket Number</div>
-      <div class="t-code" id="rCode"></div>
-      <div class="t-sub">Metaverse Age Training Institute · 2025</div>
-    </div>
-    <div class="follow-box anim a7">
+
+    <div class="follow-box anim a6">
       <div class="fb-title">Follow <em>MATI</em> for the draw result!</div>
       <div class="soc-btns">
         <a class="soc-btn soc-fb" href="https://www.facebook.com/metaverseage.ae" target="_blank">f Facebook</a>
@@ -676,7 +663,42 @@ body{height:100%;background:var(--black);color:var(--white);font-family:'Barlow'
         <a class="soc-btn soc-li" href="https://ae.linkedin.com/company/metaverse-age" target="_blank">in LinkedIn</a>
       </div>
     </div>
-    <button class="btn btn-ghost anim a8" onclick="resetApp()">✓ Done — Back to Start</button>
+    <button class="btn btn-ghost anim a7" onclick="resetApp()">✓ Done — Back to Start</button>
+  </div>
+</div>
+
+<!-- ══════════ S-DUPE: ALREADY REGISTERED ══════════ -->
+<div class="screen" id="s-dupe">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:68px 24px 40px;text-align:center">
+    <div style="width:100%;max-width:380px">
+      <div class="anim a1" style="font-size:56px;margin-bottom:16px">🚫</div>
+      <div class="tag anim a2" style="margin-bottom:8px">Already Registered</div>
+      <div class="hdg anim a3" style="font-size:clamp(30px,8vw,46px);margin-bottom:12px">You're already<br>in the draw!</div>
+      <div class="sub anim a4" style="margin-bottom:32px">This contact number has already been registered. Only one entry per person is allowed.<br><br>Follow our social media to find out if you won!</div>
+      <div class="follow-box anim a5" style="text-align:left">
+        <div class="fb-title">Follow <em>MATI</em> for the draw result!</div>
+        <div class="soc-btns">
+          <a class="soc-btn soc-fb" href="https://www.facebook.com/metaverseage.ae" target="_blank">f Facebook</a>
+          <a class="soc-btn soc-ig" href="https://www.instagram.com/metaverseage.ae/" target="_blank">📷 Instagram</a>
+          <a class="soc-btn soc-tt" href="https://www.tiktok.com/@metaverseagetraining" target="_blank">♪ TikTok</a>
+          <a class="soc-btn soc-li" href="https://ae.linkedin.com/company/metaverse-age" target="_blank">in LinkedIn</a>
+        </div>
+      </div>
+      <button class="btn btn-ghost anim a6" style="margin-top:16px" onclick="resetApp()">← Back to Start</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S-ERROR: SUBMISSION ERROR ══════════ -->
+<div class="screen" id="s-error">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:68px 24px 40px;text-align:center">
+    <div style="width:100%;max-width:380px">
+      <div class="anim a1" style="font-size:56px;margin-bottom:16px">⚠️</div>
+      <div class="tag anim a2" style="margin-bottom:8px;color:var(--muted)">Connection Issue</div>
+      <div class="hdg anim a3" style="font-size:clamp(28px,7vw,42px);margin-bottom:12px">Something went<br>wrong</div>
+      <div class="sub anim a4" style="margin-bottom:32px">We couldn't confirm your submission. Please try again or approach the MATI booth staff for assistance.</div>
+      <button class="btn btn-red anim a5" onclick="resetApp()">Try Again</button>
+    </div>
   </div>
 </div>
 
@@ -1028,32 +1050,42 @@ function submitForm() {
   };
 
   submitViaIframe(payload, function(response) {
+    document.getElementById('loader').classList.remove('show');
+
     if (response.status === 'ok') {
+      // Saved successfully — proceed to wheel
       afterSubmit(
         primary.enrolleeName || primary.guardianName || primary.referrerName,
         response.raffleCode,
         phone
       );
     } else if (response.status === 'duplicate') {
-      document.getElementById('loader').classList.remove('show');
-      // Show the right dupe message based on branch
-      const dupeMap = {
-        'self-self': 'dupe-s',
-        'self-ref':  'dupe-r',
-        'parent-self': 'dupe-p',
-        'parent-ref': 'dupe-pr'
-      };
-      const dupeId = dupeMap[who + '-' + mode];
-      if (dupeId) document.getElementById(dupeId).classList.add('show');
+      // Already registered — show duplicate screen, do NOT proceed to wheel
+      showDuplicateScreen();
     } else {
-      // Fallback — if script errors, still proceed so no one is left stuck
-      afterSubmit(
-        primary.enrolleeName || primary.guardianName || primary.referrerName,
-        'MATI-' + new Date().getFullYear() + '-' + String(count).padStart(4,'0'),
-        phone
-      );
+      // Timeout or script error — show a try again message, do NOT proceed to wheel
+      // We cannot verify the entry was saved so we must not award a prize
+      showErrorScreen();
     }
   });
+}
+
+function showDuplicateScreen() {
+  const cur = document.querySelector('.screen.active');
+  if (cur) { cur.classList.add('exit'); setTimeout(() => cur.classList.remove('active','exit'), 300); }
+  const s = document.getElementById('s-dupe');
+  s.classList.add('active');
+  s.querySelectorAll('.anim').forEach(el => { el.style.animation='none'; el.offsetHeight; el.style.animation=''; });
+  document.getElementById('backBtn').classList.remove('show');
+}
+
+function showErrorScreen() {
+  const cur = document.querySelector('.screen.active');
+  if (cur) { cur.classList.add('exit'); setTimeout(() => cur.classList.remove('active','exit'), 300); }
+  const s = document.getElementById('s-error');
+  s.classList.add('active');
+  s.querySelectorAll('.anim').forEach(el => { el.style.animation='none'; el.offsetHeight; el.style.animation=''; });
+  document.getElementById('backBtn').classList.remove('show');
 }
 
 // ── IFRAME SUBMISSION (avoids CORS, allows reading response) ──
@@ -1131,7 +1163,7 @@ function afterSubmit(name, code, phone) {
   // Pre-fill result screen with server-generated code
   const firstName = (name || 'Friend').split(' ')[0];
   document.getElementById('rName').textContent = firstName + '!';
-  document.getElementById('rCode').textContent = code;
+
   // Draw wheel and go
   drawWheel(0);
   wheelSpun = false;

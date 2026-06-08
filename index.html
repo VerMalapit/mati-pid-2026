@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MATI — PH Independence Day 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── RESET ── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --red:#E8181B;--black:#111;--card:#1E1E1E;--card2:#252525;
+  --border:#2E2E2E;--white:#F2F2F2;--muted:#777;--green:#2ECC71;
+  --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+}
+html{height:100%;overflow:hidden}
+body{height:100%;background:var(--black);color:var(--white);font-family:'Barlow',sans-serif;overflow:hidden;position:fixed;width:100%}
+
+/* ── APP SHELL ── */
+#app{position:fixed;inset:0;overflow:hidden}
+.screen{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;opacity:0;pointer-events:none;
+  transform:translateX(32px);transition:opacity .28s ease,transform .28s ease;
+  padding-top:calc(var(--safe-t) + 5px);
+  padding-bottom:calc(var(--safe-b) + 16px);
+}
+.screen.active{opacity:1;pointer-events:auto;transform:translateX(0)}
+.screen.exit{opacity:0;transform:translateX(-32px);pointer-events:none}
+
+/* ── FLAG STRIP ── */
+.flag{position:fixed;top:0;left:0;right:0;height:5px;z-index:100;
+  background:linear-gradient(90deg,#0038A8 33%,#CE1126 33%,#CE1126 66%,#FCD116 66%)}
+
+/* ── BACK BTN ── */
+#backBtn{position:fixed;top:calc(var(--safe-t)+10px);left:14px;z-index:99;
+  background:rgba(20,20,20,.92);border:1px solid var(--border);border-radius:10px;
+  padding:8px 14px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;
+  font-weight:600;cursor:pointer;display:none;align-items:center;gap:6px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:color .2s,border-color .2s}
+#backBtn.show{display:flex}
+#backBtn:active{color:var(--white);border-color:var(--white)}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;z-index:200;background:rgba(17,17,17,.9);
+  backdrop-filter:blur(6px);display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px}
+#loader.show{display:flex}
+.spinner{width:36px;height:36px;border:3px solid var(--border);
+  border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-txt{font-family:'Barlow Condensed',sans-serif;font-size:16px;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+
+/* ── TYPOGRAPHY ── */
+.tag{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red)}
+.hdg{font-family:'Barlow Condensed',sans-serif;font-weight:900;text-transform:uppercase;line-height:1}
+.sub{font-size:14px;color:var(--muted);line-height:1.55}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:17px;border:none;border-radius:14px;
+  font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;
+  text-transform:uppercase;letter-spacing:2px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:transform .15s,box-shadow .15s}
+.btn:active{transform:scale(.97)}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:active{box-shadow:0 0 0 4px rgba(232,24,27,.2)}
+.btn-ghost{background:transparent;color:var(--muted);border:2px solid var(--border)}
+.btn-ghost:active{border-color:var(--white);color:var(--white)}
+
+/* ── FORM ELEMENTS ── */
+.fsec{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--red);margin:22px 0 12px}
+.fgrp{margin-bottom:14px}
+.flbl{display:block;font-size:11px;font-weight:600;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.finp,.fsel{width:100%;background:var(--card);border:2px solid var(--border);
+  border-radius:12px;padding:15px 16px;color:var(--white);
+  font-family:'Barlow',sans-serif;font-size:16px;outline:none;
+  transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.finp:focus,.fsel:focus{border-color:var(--red)}
+.finp::placeholder{color:#444}
+.fsel option{background:#1E1E1E}
+.sel-wrap{position:relative}
+.sel-wrap::after{content:'▾';position:absolute;right:16px;top:50%;
+  transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:14px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ferr{font-size:12px;color:var(--red);margin-top:4px;display:none}
+.ferr.show{display:block}
+.phone-dupe{background:rgba(232,24,27,.08);border:1px solid rgba(232,24,27,.3);
+  border-radius:10px;padding:12px 14px;font-size:13px;color:var(--red);
+  margin-top:8px;display:none;line-height:1.5}
+.phone-dupe.show{display:block}
+.chk-row{display:flex;align-items:flex-start;gap:12px;padding:13px;
+  background:var(--card);border-radius:12px;border:2px solid var(--border);
+  margin-bottom:10px;cursor:pointer;transition:border-color .2s}
+.chk-row:has(input:checked){border-color:rgba(232,24,27,.45)}
+.chk-row input{width:20px;height:20px;accent-color:var(--red);flex-shrink:0;margin-top:1px;cursor:pointer}
+.chk-row label{font-size:13px;color:var(--muted);line-height:1.5;cursor:pointer}
+.divider-line{height:1px;background:var(--border);margin:20px 0}
+.friend-box{background:var(--card2);border:1px solid var(--border);
+  border-radius:16px;padding:16px;margin-bottom:4px}
+.friend-box-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;
+  font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:14px;
+  display:flex;align-items:center;gap:8px}
+.friend-box-title span{color:var(--red)}
+
+/* ── CHOICE CARDS (sub-branch) ── */
+.choice-cards{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+.choice-card{background:var(--card);border:2px solid var(--border);border-radius:16px;
+  padding:18px 20px;cursor:pointer;display:flex;align-items:center;gap:16px;
+  transition:border-color .2s,background .2s,transform .15s}
+.choice-card:active{border-color:var(--red);background:rgba(232,24,27,.07);transform:scale(.98)}
+.cc-icon{width:48px;height:48px;flex-shrink:0;background:rgba(232,24,27,.1);
+  border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.cc-lbl{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;text-transform:uppercase}
+.cc-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.cc-arr{color:var(--red);font-size:18px;margin-left:auto;flex-shrink:0}
+
+/* ── INTEREST TOGGLE ── */
+.interest-toggle{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.int-btn{padding:14px 10px;border:2px solid var(--border);border-radius:12px;
+  background:var(--card);cursor:pointer;text-align:center;transition:all .2s}
+.int-btn:active,.int-btn.active{border-color:var(--red);background:rgba(232,24,27,.1)}
+.int-btn .ib-icon{font-size:24px;margin-bottom:6px}
+.int-btn .ib-lbl{font-family:'Barlow Condensed',sans-serif;font-size:16px;
+  font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.int-btn .ib-sub{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+/* ── SCREEN PADDINGS ── */
+.s-pad{padding:68px 22px 40px;max-width:500px;margin:0 auto}
+.s-center{display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;min-height:100%;padding:68px 24px 40px}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.anim{animation:fadeUp .45s ease both}
+.a1{animation-delay:.04s;opacity:0}.a2{animation-delay:.1s;opacity:0}
+.a3{animation-delay:.17s;opacity:0}.a4{animation-delay:.24s;opacity:0}
+.a5{animation-delay:.31s;opacity:0}.a6{animation-delay:.38s;opacity:0}
+.a7{animation-delay:.45s;opacity:0}.a8{animation-delay:.52s;opacity:0}
+
+/* ── WELCOME ── */
+.w-rings{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.ring{position:absolute;border-radius:50%;border:1px solid rgba(232,24,27,.1)}
+.r1{width:480px;height:480px;top:-160px;left:-140px;animation:pulse 5s ease-in-out infinite}
+.r2{width:300px;height:300px;bottom:-80px;right:-70px;animation:pulse 5s 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:.8}}
+.w-logo{width:76px;height:76px;margin:0 auto 16px}
+.w-logo svg{width:100%;height:100%}
+.w-pill{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(232,24,27,.1);border:1px solid rgba(232,24,27,.28);
+  border-radius:999px;padding:6px 16px;font-size:10px;font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--red);margin-bottom:16px}
+.w-pill .dot{width:6px;height:6px;background:var(--red);border-radius:50%;
+  animation:blink 1.3s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.w-title{font-size:clamp(46px,12vw,76px);margin-bottom:10px}
+.w-title em{color:var(--red);font-style:normal}
+.w-divider{width:34px;height:2px;background:var(--red);margin:18px auto}
+.prize-box{background:linear-gradient(135deg,rgba(232,24,27,.14),rgba(232,24,27,.04));
+  border:1px solid rgba(232,24,27,.22);border-radius:16px;
+  padding:14px 22px;margin-bottom:26px;width:100%;max-width:320px}
+.prize-box .pl{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:4px}
+.prize-box .pn{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;text-transform:uppercase}
+.prize-box .ps{font-size:12px;color:var(--muted);margin-top:3px}
+.w-footer{font-size:11px;color:#444;margin-top:20px}
+
+/* ── WHO CARDS ── */
+.who-cards{width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px}
+.who-card{background:var(--card);border:2px solid var(--border);border-radius:20px;
+  padding:22px 20px;cursor:pointer;display:flex;align-items:center;gap:18px;
+  transition:border-color .2s,background .2s,transform .15s;position:relative;overflow:hidden}
+.who-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--red);transform:scaleY(0);transition:transform .2s;transform-origin:bottom}
+.who-card:active{border-color:var(--red);background:rgba(232,24,27,.07);transform:scale(.98)}
+.who-card:active::before{transform:scaleY(1)}
+.wc-icon{width:54px;height:54px;flex-shrink:0;background:rgba(232,24,27,.1);
+  border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px}
+.wc-lbl{font-family:'Barlow Condensed',sans-serif;font-size:23px;font-weight:700;text-transform:uppercase}
+.wc-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.wc-arr{color:var(--red);font-size:18px;margin-left:auto;flex-shrink:0}
+
+/* ── WHEEL SCREEN ── */
+#s-wheel{display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:100%;padding:68px 24px 40px}
+.wheel-wrap{position:relative;display:flex;align-items:center;justify-content:center;margin:24px 0 20px}
+#wheelCanvas{display:block;max-width:min(320px,80vw);max-height:min(320px,80vw)}
+.wheel-pointer{position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;
+  border-top:22px solid var(--red);filter:drop-shadow(0 2px 4px rgba(232,24,27,.5))}
+.wheel-center{position:absolute;width:28px;height:28px;background:var(--black);
+  border:3px solid var(--border);border-radius:50%;
+  left:50%;top:50%;transform:translate(-50%,-50%)}
+.spin-lbl{font-size:12px;color:var(--muted);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600}
+
+/* ── RESULT / RAFFLE ── */
+#s-result{display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:100%;padding:60px 24px 50px;text-align:center}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:0}
+.raffle-body{position:relative;z-index:1;width:100%;max-width:400px}
+.r-burst{font-size:54px;animation:burst .5s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes burst{0%{transform:scale(0) rotate(-20deg);opacity:0}70%{transform:scale(1.2) rotate(4deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.r-tag{font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin:12px 0 4px}
+.r-name{font-family:'Barlow Condensed',sans-serif;font-size:clamp(36px,10vw,58px);font-weight:900;text-transform:uppercase}
+.r-sub{font-size:14px;color:var(--muted);margin-top:8px;line-height:1.55}
+.prize-reveal{background:linear-gradient(135deg,rgba(232,24,27,.14),rgba(232,24,27,.04));
+  border:1px solid rgba(232,24,27,.3);border-radius:18px;padding:18px 22px;
+  margin:18px 0 14px}
+.pr-lbl{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.pr-prize{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;text-transform:uppercase;color:var(--red)}
+.pr-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.ticket{margin:0 auto 16px;background:var(--card);
+  border:2px dashed rgba(232,24,27,.4);border-radius:18px;
+  padding:20px;position:relative;overflow:hidden}
+.ticket::before,.ticket::after{content:'';position:absolute;width:20px;height:20px;
+  background:var(--black);border-radius:50%;top:50%;transform:translateY(-50%)}
+.ticket::before{left:-11px}.ticket::after{right:-11px}
+.t-lbl{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.t-code{font-family:'Barlow Condensed',sans-serif;font-size:46px;font-weight:900;
+  letter-spacing:4px;color:var(--red);line-height:1}
+.t-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.follow-box{background:var(--card);border-radius:16px;padding:16px;margin-bottom:18px}
+.fb-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;
+  text-transform:uppercase;margin-bottom:12px}
+.fb-title em{color:var(--red);font-style:normal}
+.soc-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.soc-btn{display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 10px;
+  border-radius:10px;border:none;font-family:'Barlow',sans-serif;font-size:13px;
+  font-weight:600;cursor:pointer;text-decoration:none;transition:filter .2s,transform .15s}
+.soc-btn:active{transform:scale(.96);filter:brightness(.88)}
+.soc-fb{background:#1877F2;color:#fff}
+.soc-ig{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff}
+.soc-tt{background:#111;color:#fff;border:1px solid #333}
+.soc-li{background:#0A66C2;color:#fff}
+</style>
+</head>
+<body>
+<div class="flag"></div>
+<button id="backBtn" onclick="goBack()">← Back</button>
+<div id="loader"><div class="spinner"></div><div class="loader-txt">Submitting…</div></div>
+<canvas id="confetti"></canvas>
+
+<div id="app">
+
+<!-- ══════════ S0: WELCOME ══════════ -->
+<div class="screen active" id="s-welcome">
+  <div class="s-center" style="max-width:360px;margin:0 auto">
+    <div class="w-rings"><div class="ring r1"></div><div class="ring r2"></div></div>
+    <div style="position:relative;z-index:1;width:100%">
+      <div class="w-logo anim a1">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 175 L55 25 L100 95 L145 25 L182 175" stroke="#1A1A1A" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M58 175 L100 42 L142 175" stroke="#E8181B" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <line x1="75" y1="128" x2="125" y2="128" stroke="#E8181B" stroke-width="26" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="w-pill anim a2"><div class="dot"></div>Philippine Independence Day 2026</div>
+      <h1 class="hdg w-title anim a3">Discover<br>Your Path<br>at <em>MATI</em></h1>
+      <p class="sub anim a4" style="max-width:280px;margin:10px auto 0">Fill in your details and spin the wheel for a chance to win!</p>
+      <div class="w-divider anim a5"></div>
+      <div class="prize-box anim a6">
+        <div class="pl">🎉 Grand Prize Raffle</div>
+        <div class="pn">🎁 Win a Tablet</div>
+        <div class="ps">Plus instant prizes from the spin wheel!</div>
+      </div>
+      <button class="btn btn-red anim a7" onclick="goTo('s-who')">Let's Go ▶</button>
+      <p class="w-footer anim a8">Metaverse Age Training Institute · Dubai, UAE · KHDA Approved</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S1: WHO ══════════ -->
+<div class="screen" id="s-who">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:68px 24px 40px">
+    <div style="text-align:center;margin-bottom:30px;width:100%;max-width:420px">
+      <div class="tag anim a1">Step 1</div>
+      <div class="hdg anim a2" style="font-size:clamp(34px,9vw,54px);margin:8px 0">Who are<br>you today?</div>
+      <div class="sub anim a3">Choose what applies to you</div>
+    </div>
+    <div class="who-cards anim a4">
+      <div class="who-card" onclick="goTo('s-self-or-ref')">
+        <div class="wc-icon">👤</div>
+        <div>
+          <div class="wc-lbl">I'm enquiring for myself</div>
+          <div class="wc-sub">Student, graduate, or working professional</div>
+        </div>
+        <div class="wc-arr">→</div>
+      </div>
+      <div class="who-card" onclick="goTo('s-parent-or-ref')">
+        <div class="wc-icon">👨‍👩‍👦</div>
+        <div>
+          <div class="wc-lbl">I'm a parent</div>
+          <div class="wc-sub">Enquiring on behalf of my child</div>
+        </div>
+        <div class="wc-arr">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S2A: SELF — filling for self or friend ══════════ -->
+<div class="screen" id="s-self-or-ref">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:68px 24px 40px">
+    <div style="text-align:center;margin-bottom:28px;width:100%;max-width:420px">
+      <div class="tag anim a1">Step 2</div>
+      <div class="hdg anim a2" style="font-size:clamp(30px,8vw,48px);margin:8px 0">Are you filling<br>this out…</div>
+    </div>
+    <div class="choice-cards anim a3" style="width:100%;max-width:420px">
+      <div class="choice-card" onclick="setSelfMode('self');goTo('s-interest')">
+        <div class="cc-icon">✍️</div>
+        <div>
+          <div class="cc-lbl">For myself</div>
+          <div class="cc-sub">I want to know more about MATI programmes</div>
+        </div>
+        <div class="cc-arr">→</div>
+      </div>
+      <div class="choice-card" onclick="setSelfMode('ref');goTo('s-interest')">
+        <div class="cc-icon">🤝</div>
+        <div>
+          <div class="cc-lbl">Referring a friend</div>
+          <div class="cc-sub">I'm signing up a friend who might be interested</div>
+        </div>
+        <div class="cc-arr">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S2B: PARENT — filling for child or friend's child ══════════ -->
+<div class="screen" id="s-parent-or-ref">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:68px 24px 40px">
+    <div style="text-align:center;margin-bottom:28px;width:100%;max-width:420px">
+      <div class="tag anim a1">Step 2</div>
+      <div class="hdg anim a2" style="font-size:clamp(30px,8vw,48px);margin:8px 0">Are you filling<br>this out…</div>
+    </div>
+    <div class="choice-cards anim a3" style="width:100%;max-width:420px">
+      <div class="choice-card" onclick="setParentMode('self');goTo('s-interest')">
+        <div class="cc-icon">👧</div>
+        <div>
+          <div class="cc-lbl">For my child</div>
+          <div class="cc-sub">I want to enquire about programmes for my child</div>
+        </div>
+        <div class="cc-arr">→</div>
+      </div>
+      <div class="choice-card" onclick="setParentMode('ref');goTo('s-interest')">
+        <div class="cc-icon">🤝</div>
+        <div>
+          <div class="cc-lbl">For a friend's child</div>
+          <div class="cc-sub">I'm referring a friend's child who might be interested</div>
+        </div>
+        <div class="cc-arr">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S3: INTEREST (pathway or training) ══════════ -->
+<div class="screen" id="s-interest">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:68px 24px 40px">
+    <div style="text-align:center;margin-bottom:28px;width:100%;max-width:420px">
+      <div class="tag anim a1">Step 3</div>
+      <div class="hdg anim a2" style="font-size:clamp(28px,8vw,46px);margin:8px 0">What are you<br>interested in?</div>
+      <div class="sub anim a3">This helps us point you to the right programmes</div>
+    </div>
+    <div class="interest-toggle anim a4" style="width:100%;max-width:420px">
+      <div class="int-btn" id="ib-pathway" onclick="setInterest('pathway')">
+        <div class="ib-icon">🎓</div>
+        <div class="ib-lbl">Pathway<br>Programme</div>
+        <div class="ib-sub">Job-ready qualifications alongside your degree</div>
+      </div>
+      <div class="int-btn" id="ib-training" onclick="setInterest('training')">
+        <div class="ib-icon">⚡</div>
+        <div class="ib-lbl">Training<br>Course</div>
+        <div class="ib-sub">Short professional skills courses</div>
+      </div>
+    </div>
+    <div style="width:100%;max-width:420px" class="anim a5">
+      <button class="btn btn-red" id="interest-next-btn" onclick="goToForm()" style="opacity:.4;pointer-events:none">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S4: FORM ══════════ -->
+<div class="screen" id="s-form">
+  <div class="s-pad">
+
+    <div class="anim a1" style="margin-bottom:22px">
+      <div class="tag">Your Details</div>
+      <div class="hdg" style="font-size:clamp(28px,7vw,42px);margin:8px 0 6px" id="form-title">Fill in the form</div>
+      <div class="sub" id="form-subtitle">Complete this to spin the wheel and get your raffle entry</div>
+    </div>
+
+    <!-- ── INDIVIDUAL SELF ── -->
+    <div id="blk-self">
+      <div class="fsec">Your Info</div>
+      <div class="fgrp">
+        <label class="flbl" for="s-name">Full Name *</label>
+        <input class="finp" id="s-name" type="text" placeholder="e.g. Maria Santos" autocomplete="name">
+        <div class="ferr" id="e-s-name">Please enter your full name</div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl" for="s-email">Email Address *</label>
+        <input class="finp" id="s-email" type="email" placeholder="e.g. maria@email.com" autocomplete="email" inputmode="email">
+        <div class="ferr" id="e-s-email">Please enter a valid email</div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl" for="s-phone">Contact Number *</label>
+        <input class="finp" id="s-phone" type="tel" placeholder="e.g. 0501234567" autocomplete="tel" inputmode="tel">
+        <div class="ferr" id="e-s-phone">Please enter a valid contact number</div>
+        <div class="phone-dupe" id="dupe-s">📵 This number is already registered. Each person can only enter once.</div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl" for="s-year">Year / Grade Level *</label>
+        <div class="sel-wrap">
+          <select class="fsel" id="s-year" onchange="toggleParentFields()">
+            <option value="">Select your level</option>
+            <option value="Grade 10">Grade 10</option>
+            <option value="Grade 11">Grade 11</option>
+            <option value="Grade 12">Grade 12</option>
+            <option value="Undergraduate">Undergraduate</option>
+            <option value="Working Professional">Working Professional</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="ferr" id="e-s-year">Please select your year level</div>
+      </div>
+      <!-- parent details — shown only for Grade 10/11/12 -->
+      <div id="blk-parent-details" style="display:none">
+        <div class="fsec">Parent / Guardian Details</div>
+        <div class="fgrp">
+          <label class="flbl" for="s-pname">Parent's Full Name *</label>
+          <input class="finp" id="s-pname" type="text" placeholder="e.g. Jose Santos" autocomplete="name">
+          <div class="ferr" id="e-s-pname">Please enter parent's name</div>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="s-pphone">Parent's Contact Number *</label>
+          <input class="finp" id="s-pphone" type="tel" placeholder="e.g. 0501234567" inputmode="tel">
+          <div class="ferr" id="e-s-pphone">Please enter parent's contact number</div>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="s-pemail">Parent's Email *</label>
+          <input class="finp" id="s-pemail" type="email" placeholder="e.g. jose@email.com" inputmode="email">
+          <div class="ferr" id="e-s-pemail">Please enter parent's email</div>
+        </div>
+      </div>
+      <div class="fsec">Programme Interest</div>
+      <div class="fgrp">
+        <label class="flbl" for="s-prog">Select Programme / Course *</label>
+        <div class="sel-wrap">
+          <select class="fsel" id="s-prog">
+            <option value="">Select one</option>
+          </select>
+        </div>
+        <div class="ferr" id="e-s-prog">Please select a programme or course</div>
+      </div>
+    </div>
+
+    <!-- ── INDIVIDUAL REFERRING FRIEND ── -->
+    <div id="blk-self-ref" style="display:none">
+      <div class="fsec">Your Info</div>
+      <div class="fgrp">
+        <label class="flbl" for="r-name">Your Full Name *</label>
+        <input class="finp" id="r-name" type="text" placeholder="e.g. Maria Santos" autocomplete="name">
+        <div class="ferr" id="e-r-name">Please enter your full name</div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl" for="r-email">Your Email *</label>
+        <input class="finp" id="r-email" type="email" placeholder="e.g. maria@email.com" inputmode="email">
+        <div class="ferr" id="e-r-email">Please enter a valid email</div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl" for="r-phone">Your Contact Number *</label>
+        <input class="finp" id="r-phone" type="tel" placeholder="e.g. 0501234567" inputmode="tel">
+        <div class="ferr" id="e-r-phone">Please enter a valid contact number</div>
+        <div class="phone-dupe" id="dupe-r">📵 This number is already registered. Each person can only enter once.</div>
+      </div>
+      <div class="divider-line"></div>
+      <div class="friend-box">
+        <div class="friend-box-title">👤 <span>Friend's Details</span></div>
+        <div class="fgrp">
+          <label class="flbl" for="rf-name">Friend's Full Name *</label>
+          <input class="finp" id="rf-name" type="text" placeholder="e.g. Juan Dela Cruz">
+          <div class="ferr" id="e-rf-name">Please enter friend's name</div>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="rf-email">Friend's Email *</label>
+          <input class="finp" id="rf-email" type="email" placeholder="e.g. juan@email.com" inputmode="email">
+          <div class="ferr" id="e-rf-email">Please enter friend's email</div>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="rf-phone">Friend's Contact *</label>
+          <input class="finp" id="rf-phone" type="tel" placeholder="e.g. 0501234567" inputmode="tel">
+          <div class="ferr" id="e-rf-phone">Please enter friend's contact</div>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="rf-year">Friend's Year Level</label>
+          <div class="sel-wrap">
+            <select class="fsel" id="rf-year">
+              <option value="">Select</option>
+              <option>Grade 10</option><option>Grade 11</option><option>Grade 12</option>
+              <option>Undergraduate</option><option>Working Professional</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="rf-prog">Programme Interest *</label>
+          <div class="sel-wrap">
+            <select class="fsel" id="rf-prog">
+              <option value="">Select one</option>
+            </select>
+          </div>
+          <div class="ferr" id="e-rf-prog">Please select a programme</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PARENT SELF ── -->
+    <div id="blk-parent-self" style="display:none">
+      <div class="fsec">Parent / Guardian Info</div>
+      <div class="fgrp">
+        <label class="flbl" for="p-name">Your Full Name *</label>
+        <input class="finp" id="p-name" type="text" placeholder="e.g. Jose Santos" autocomplete="name">
+        <div class="ferr" id="e-p-name">Please enter your full name</div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl" for="p-phone">Your Contact Number *</label>
+        <input class="finp" id="p-phone" type="tel" placeholder="e.g. 0501234567" inputmode="tel">
+        <div class="ferr" id="e-p-phone">Please enter your contact number</div>
+        <div class="phone-dupe" id="dupe-p">📵 This number is already registered. Each person can only enter once.</div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl" for="p-email">Your Email *</label>
+        <input class="finp" id="p-email" type="email" placeholder="e.g. jose@email.com" inputmode="email">
+        <div class="ferr" id="e-p-email">Please enter your email</div>
+      </div>
+      <div class="fsec">Child's Details</div>
+      <div class="fgrp">
+        <label class="flbl" for="p-cname">Child's Full Name *</label>
+        <input class="finp" id="p-cname" type="text" placeholder="e.g. Maria Santos">
+        <div class="ferr" id="e-p-cname">Please enter child's name</div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl" for="p-cyear">Child's Year Level *</label>
+        <div class="sel-wrap">
+          <select class="fsel" id="p-cyear">
+            <option value="">Select</option>
+            <option>Grade 10</option><option>Grade 11</option><option>Grade 12</option>
+            <option>Undergraduate</option><option>Other</option>
+          </select>
+        </div>
+        <div class="ferr" id="e-p-cyear">Please select child's year level</div>
+      </div>
+      <div class="fsec">Programme Interest</div>
+      <div class="fgrp">
+        <label class="flbl" for="p-prog">Select Programme / Course *</label>
+        <div class="sel-wrap">
+          <select class="fsel" id="p-prog">
+            <option value="">Select one</option>
+          </select>
+        </div>
+        <div class="ferr" id="e-p-prog">Please select a programme</div>
+      </div>
+    </div>
+
+    <!-- ── PARENT REFERRING FRIEND'S CHILD ── -->
+    <div id="blk-parent-ref" style="display:none">
+      <div class="fsec">Your Info</div>
+      <div class="fgrp">
+        <label class="flbl" for="pr-name">Your Full Name *</label>
+        <input class="finp" id="pr-name" type="text" placeholder="e.g. Jose Santos" autocomplete="name">
+        <div class="ferr" id="e-pr-name">Please enter your full name</div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl" for="pr-phone">Your Contact Number *</label>
+        <input class="finp" id="pr-phone" type="tel" placeholder="e.g. 0501234567" inputmode="tel">
+        <div class="ferr" id="e-pr-phone">Please enter your contact number</div>
+        <div class="phone-dupe" id="dupe-pr">📵 This number is already registered. Each person can only enter once.</div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl" for="pr-email">Your Email *</label>
+        <input class="finp" id="pr-email" type="email" placeholder="e.g. jose@email.com" inputmode="email">
+        <div class="ferr" id="e-pr-email">Please enter your email</div>
+      </div>
+      <div class="divider-line"></div>
+      <div class="friend-box">
+        <div class="friend-box-title">👧 <span>Friend's Child Details</span></div>
+        <div class="fgrp">
+          <label class="flbl" for="prf-cname">Child's Full Name *</label>
+          <input class="finp" id="prf-cname" type="text" placeholder="e.g. Juan Dela Cruz">
+          <div class="ferr" id="e-prf-cname">Please enter child's name</div>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="prf-cemail">Child's Email *</label>
+          <input class="finp" id="prf-cemail" type="email" placeholder="e.g. juan@email.com" inputmode="email">
+          <div class="ferr" id="e-prf-cemail">Please enter child's email</div>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="prf-cphone">Child's Contact *</label>
+          <input class="finp" id="prf-cphone" type="tel" placeholder="e.g. 0501234567" inputmode="tel">
+          <div class="ferr" id="e-prf-cphone">Please enter child's contact</div>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="prf-cyear">Child's Year Level</label>
+          <div class="sel-wrap">
+            <select class="fsel" id="prf-cyear">
+              <option value="">Select</option>
+              <option>Grade 10</option><option>Grade 11</option><option>Grade 12</option>
+              <option>Undergraduate</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="prf-prog">Programme Interest *</label>
+          <div class="sel-wrap">
+            <select class="fsel" id="prf-prog">
+              <option value="">Select one</option>
+            </select>
+          </div>
+          <div class="ferr" id="e-prf-prog">Please select a programme</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSENT -->
+    <div class="fsec">Consent</div>
+    <div class="chk-row">
+      <input type="checkbox" id="f-consent" checked>
+      <label for="f-consent">I agree to be contacted by Metaverse Age Training Institute about programmes, events, and opportunities.</label>
+    </div>
+    <div class="chk-row">
+      <input type="checkbox" id="f-raffle" checked>
+      <label for="f-raffle">I understand the tablet raffle draw will be announced after the event on MATI's social media.</label>
+    </div>
+    <div class="ferr" id="e-consent" style="margin-bottom:12px">Please agree to continue</div>
+    <button class="btn btn-red" style="margin-top:10px" onclick="submitForm()">Submit & Spin the Wheel 🎡</button>
+
+  </div>
+</div>
+
+<!-- ══════════ S5: WHEEL ══════════ -->
+<div class="screen" id="s-wheel">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:68px 24px 40px;text-align:center;max-width:420px;margin:0 auto">
+    <div class="tag anim a1">Almost there!</div>
+    <div class="hdg anim a2" style="font-size:clamp(30px,8vw,48px);margin:8px 0 6px">Spin to Win!</div>
+    <div class="sub anim a3" style="margin-bottom:4px">Tap the button below to spin</div>
+    <div class="wheel-wrap anim a4">
+      <canvas id="wheelCanvas" width="320" height="320"></canvas>
+      <div class="wheel-pointer"></div>
+      <div class="wheel-center"></div>
+    </div>
+    <button class="btn btn-red anim a5" id="spinBtn" onclick="spinWheel()" style="max-width:280px">🎡 Spin!</button>
+  </div>
+</div>
+
+<!-- ══════════ S6: RESULT ══════════ -->
+<div class="screen" id="s-result">
+  <div class="raffle-body" style="max-width:400px;margin:0 auto">
+    <div class="r-burst anim a1">🎉</div>
+    <div class="r-tag anim a2">Congratulations!</div>
+    <div class="r-name anim a3" id="rName"></div>
+    <div class="r-sub anim a4">You've been entered into the tablet raffle!<br>Screenshot your ticket below.</div>
+    <div class="prize-reveal anim a5">
+      <div class="pr-lbl">🎁 You won an instant prize!</div>
+      <div class="pr-prize" id="rPrize"></div>
+      <div class="pr-sub">Claim your prize at the MATI booth</div>
+    </div>
+    <div class="ticket anim a6">
+      <div class="t-lbl">Raffle Ticket Number</div>
+      <div class="t-code" id="rCode"></div>
+      <div class="t-sub">Metaverse Age Training Institute · 2026</div>
+    </div>
+    <div class="follow-box anim a7">
+      <div class="fb-title">Follow <em>MATI</em> for the draw result!</div>
+      <div class="soc-btns">
+        <a class="soc-btn soc-fb" href="https://www.facebook.com/metaverseage.ae" target="_blank">f Facebook</a>
+        <a class="soc-btn soc-ig" href="https://www.instagram.com/metaverseage.ae/" target="_blank">📷 Instagram</a>
+        <a class="soc-btn soc-tt" href="https://www.tiktok.com/@metaverseagetraining" target="_blank">♪ TikTok</a>
+        <a class="soc-btn soc-li" href="https://ae.linkedin.com/company/metaverse-age" target="_blank">in LinkedIn</a>
+      </div>
+    </div>
+    <button class="btn btn-ghost anim a8" onclick="resetApp()">✓ Done — Back to Start</button>
+  </div>
+</div>
+
+</div><!-- #app -->
+<script>
+// ═══════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxnDQZ8gupXsvMI1prhTv6GsbvMewbX8Ky9NMVRqBymcrEBR0oHB_Yy1LDVwCnXxTt5/exec';
+const SECRET_TOKEN = 'MATI2026PH';
+// ═══════════════════════════════════
+// PROGRAMMES
+// ═══════════════════════════════════
+const PATHWAY = [
+  'Level 3 — International Foundation Studies',
+  'Level 4 — Business Management',
+  'Level 4 — Business Management (Accounting)',
+  'Level 4 — Creative Computing',
+  'Level 4 — Creative Media',
+  'Level 4 — Cyber Security',
+  'Level 4 — Psychology'
+];
+const TRAINING = [
+  'Digital Marketing',
+  'Public Speaking',
+  'Adobe Premiere Video Editing',
+  'Advanced Skills in Graphic Designing',
+  'UAE Corporate Tax',
+  'Advanced Programming Skills',
+  'Ethical Hacking Fundamentals',
+  'VFX Training and Character Animation',
+  'Training in Emotional Intelligence',
+  'Training in Positive Psychology'
+];
+
+// ═══════════════════════════════════
+// WHEEL CONFIG
+// ═══════════════════════════════════
+const PRIZES = ['Goodie Bag','Notebook','Mug','Pen','Chocolate'];
+const PRIZE_COLORS = ['#E8181B','#c0392b','#2c2c2c','#3a3a3a','#1a1a1a'];
+const PRIZE_EMOJIS = ['🎁','📓','☕','🖊️','🍫'];
+// 10 slices: 2 of each prize, interleaved
+const SLICES = [0,2,1,3,4,2,0,4,1,3]; // indices into PRIZES array
+
+// Weighted outcomes per interest
+const WEIGHTS = {
+  pathway:  { 0:20, 1:40, 2:40, 3:0,  4:0  }, // Goodie Bag, Notebook, Mug, Pen, Chocolate
+  training: { 0:0,  1:20, 2:20, 3:30, 4:30 }
+};
+
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+let who = '';       // 'self' | 'parent'
+let mode = '';      // 'self' | 'ref'
+let interest = '';  // 'pathway' | 'training'
+let hist = [];
+let phones = JSON.parse(localStorage.getItem('mati_phones') || '[]');
+let count  = parseInt(localStorage.getItem('mati_count') || '0');
+let wonPrize = '';
+let wheelSpun = false;
+
+// ═══════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════
+function goTo(id) {
+  const cur = document.querySelector('.screen.active');
+  if (cur) {
+    hist.push(cur.id);
+    cur.classList.add('exit');
+    setTimeout(() => cur.classList.remove('active','exit'), 300);
+  }
+  const next = document.getElementById(id);
+  next.classList.add('active');
+  next.querySelectorAll('.anim').forEach(el => { el.style.animation='none'; el.offsetHeight; el.style.animation=''; });
+  next.scrollTop = 0;
+  const noBack = ['s-welcome','s-wheel','s-result'];
+  document.getElementById('backBtn').classList.toggle('show', !noBack.includes(id));
+}
+
+function goBack() {
+  if (!hist.length) return;
+  const prev = hist.pop();
+  const cur = document.querySelector('.screen.active');
+  if (cur) { cur.classList.add('exit'); setTimeout(() => cur.classList.remove('active','exit'), 300); }
+  const back = document.getElementById(prev);
+  back.classList.add('active');
+  back.scrollTop = 0;
+  const noBack = ['s-welcome','s-wheel','s-result'];
+  document.getElementById('backBtn').classList.toggle('show', !noBack.includes(prev));
+}
+
+// ═══════════════════════════════════
+// BRANCH SETTERS
+// ═══════════════════════════════════
+function setSelfMode(m) { who = 'self'; mode = m; }
+function setParentMode(m) { who = 'parent'; mode = m; }
+
+function setInterest(val) {
+  interest = val;
+  document.getElementById('ib-pathway').classList.toggle('active', val === 'pathway');
+  document.getElementById('ib-training').classList.toggle('active', val === 'training');
+  const btn = document.getElementById('interest-next-btn');
+  btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+}
+
+function goToForm() {
+  if (!interest) return;
+  // Show correct block
+  ['blk-self','blk-self-ref','blk-parent-self','blk-parent-ref'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  if (who === 'self' && mode === 'self')   document.getElementById('blk-self').style.display = 'block';
+  if (who === 'self' && mode === 'ref')    document.getElementById('blk-self-ref').style.display = 'block';
+  if (who === 'parent' && mode === 'self') document.getElementById('blk-parent-self').style.display = 'block';
+  if (who === 'parent' && mode === 'ref')  document.getElementById('blk-parent-ref').style.display = 'block';
+  // Populate programme dropdowns
+  populateDropdowns();
+  goTo('s-form');
+}
+
+// ═══════════════════════════════════
+// DROPDOWN POPULATION
+// ═══════════════════════════════════
+function buildOptions(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Select one</option>';
+  if (interest === 'pathway' || interest === 'both') {
+    const og1 = document.createElement('optgroup');
+    og1.label = '── Pathway Programmes ──';
+    PATHWAY.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; og1.appendChild(o); });
+    sel.appendChild(og1);
+  }
+  if (interest === 'training' || interest === 'both') {
+    const og2 = document.createElement('optgroup');
+    og2.label = '── Training Courses ──';
+    TRAINING.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; og2.appendChild(o); });
+    sel.appendChild(og2);
+  }
+  // Always show all for friend/referred sections
+  if (selectId.includes('rf-') || selectId.includes('prf-')) {
+    sel.innerHTML = '<option value="">Select one</option>';
+    const og1 = document.createElement('optgroup'); og1.label = '── Pathway Programmes ──';
+    PATHWAY.forEach(p => { const o = document.createElement('option'); o.value=p; o.textContent=p; og1.appendChild(o); });
+    const og2 = document.createElement('optgroup'); og2.label = '── Training Courses ──';
+    TRAINING.forEach(t => { const o = document.createElement('option'); o.value=t; o.textContent=t; og2.appendChild(o); });
+    sel.appendChild(og1); sel.appendChild(og2);
+  }
+}
+
+function populateDropdowns() {
+  ['s-prog','p-prog','rf-prog','prf-prog'].forEach(buildOptions);
+}
+
+// ═══════════════════════════════════
+// PARENT FIELDS TOGGLE
+// ═══════════════════════════════════
+function toggleParentFields() {
+  const yr = document.getElementById('s-year').value;
+  const show = ['Grade 10','Grade 11','Grade 12'].includes(yr);
+  document.getElementById('blk-parent-details').style.display = show ? 'block' : 'none';
+}
+
+// ═══════════════════════════════════
+// VALIDATION HELPERS
+// ═══════════════════════════════════
+function v(id, errId, condition) {
+  const ok = condition(document.getElementById(id).value.trim());
+  document.getElementById(errId).classList.toggle('show', !ok);
+  return ok;
+}
+function vCheck(id, errId) {
+  const ok = document.getElementById(id).checked;
+  document.getElementById(errId).classList.toggle('show', !ok);
+  return ok;
+}
+function clearErrs() {
+  document.querySelectorAll('.ferr').forEach(e => e.classList.remove('show'));
+  document.querySelectorAll('.phone-dupe').forEach(e => e.classList.remove('show'));
+}
+function isPhone(val) { return val.replace(/\s/g,'').length >= 7; }
+function isEmail(val) { return val.includes('@') && val.includes('.'); }
+
+// ═══════════════════════════════════
+// FORM SUBMIT
+// ═══════════════════════════════════
+function submitForm() {
+  clearErrs();
+  let ok = true;
+  let phone = '';
+
+  if (who === 'self' && mode === 'self') {
+    ok &= v('s-name','e-s-name', x => x.length > 1);
+    ok &= v('s-email','e-s-email', isEmail);
+    ok &= v('s-phone','e-s-phone', isPhone);
+    ok &= v('s-year','e-s-year', x => x !== '');
+    ok &= v('s-prog','e-s-prog', x => x !== '');
+    const yr = document.getElementById('s-year').value;
+    if (['Grade 10','Grade 11','Grade 12'].includes(yr)) {
+      ok &= v('s-pname','e-s-pname', x => x.length > 1);
+      ok &= v('s-pphone','e-s-pphone', isPhone);
+      ok &= v('s-pemail','e-s-pemail', isEmail);
+    }
+    phone = document.getElementById('s-phone').value.trim().replace(/\s/g,'');
+    if (phones.includes(phone)) { document.getElementById('dupe-s').classList.add('show'); return; }
+  }
+
+  if (who === 'self' && mode === 'ref') {
+    ok &= v('r-name','e-r-name', x => x.length > 1);
+    ok &= v('r-email','e-r-email', isEmail);
+    ok &= v('r-phone','e-r-phone', isPhone);
+    ok &= v('rf-name','e-rf-name', x => x.length > 1);
+    ok &= v('rf-email','e-rf-email', isEmail);
+    ok &= v('rf-phone','e-rf-phone', isPhone);
+    ok &= v('rf-prog','e-rf-prog', x => x !== '');
+    phone = document.getElementById('r-phone').value.trim().replace(/\s/g,'');
+    if (phones.includes(phone)) { document.getElementById('dupe-r').classList.add('show'); return; }
+  }
+
+  if (who === 'parent' && mode === 'self') {
+    ok &= v('p-name','e-p-name', x => x.length > 1);
+    ok &= v('p-phone','e-p-phone', isPhone);
+    ok &= v('p-email','e-p-email', isEmail);
+    ok &= v('p-cname','e-p-cname', x => x.length > 1);
+    ok &= v('p-cyear','e-p-cyear', x => x !== '');
+    ok &= v('p-prog','e-p-prog', x => x !== '');
+    phone = document.getElementById('p-phone').value.trim().replace(/\s/g,'');
+    if (phones.includes(phone)) { document.getElementById('dupe-p').classList.add('show'); return; }
+  }
+
+  if (who === 'parent' && mode === 'ref') {
+    ok &= v('pr-name','e-pr-name', x => x.length > 1);
+    ok &= v('pr-phone','e-pr-phone', isPhone);
+    ok &= v('pr-email','e-pr-email', isEmail);
+    ok &= v('prf-cname','e-prf-cname', x => x.length > 1);
+    ok &= v('prf-cemail','e-prf-cemail', isEmail);
+    ok &= v('prf-cphone','e-prf-cphone', isPhone);
+    ok &= v('prf-prog','e-prf-prog', x => x !== '');
+    phone = document.getElementById('pr-phone').value.trim().replace(/\s/g,'');
+    if (phones.includes(phone)) { document.getElementById('dupe-pr').classList.add('show'); return; }
+  }
+
+  ok &= vCheck('f-consent','e-consent');
+  if (!ok) return;
+
+  count++;
+  const code = `MATI-${new Date().getFullYear()}-${String(count).padStart(4,'0')}`;
+  const ts = new Date().toISOString();
+
+  // Build primary record
+  const primary = { timestamp:ts, raffleCode:code, who, mode, interest };
+  // Build friend record (if referral)
+  let friendRec = null;
+
+  if (who==='self' && mode==='self') {
+    primary.name    = g('s-name');
+    primary.email   = g('s-email');
+    primary.phone   = g('s-phone');
+    primary.year    = g('s-year');
+    primary.prog    = g('s-prog');
+    const yr = g('s-year');
+    if (['Grade 10','Grade 11','Grade 12'].includes(yr)) {
+      primary.parentName  = g('s-pname');
+      primary.parentPhone = g('s-pphone');
+      primary.parentEmail = g('s-pemail');
+    }
+  }
+  if (who==='self' && mode==='ref') {
+    primary.name  = g('r-name');
+    primary.email = g('r-email');
+    primary.phone = g('r-phone');
+    friendRec = { timestamp:ts, source:'referral', referrer:g('r-name'),
+      name:g('rf-name'), email:g('rf-email'), phone:g('rf-phone'),
+      year:g('rf-year'), prog:g('rf-prog') };
+  }
+  if (who==='parent' && mode==='self') {
+    primary.name      = g('p-name');
+    primary.phone     = g('p-phone');
+    primary.email     = g('p-email');
+    primary.childName = g('p-cname');
+    primary.childYear = g('p-cyear');
+    primary.prog      = g('p-prog');
+  }
+  if (who==='parent' && mode==='ref') {
+    primary.name  = g('pr-name');
+    primary.phone = g('pr-phone');
+    primary.email = g('pr-email');
+    friendRec = { timestamp:ts, source:'parent-referral', referrer:g('pr-name'),
+      name:g('prf-cname'), email:g('prf-cemail'), phone:g('prf-cphone'),
+      year:g('prf-cyear'), prog:g('prf-prog') };
+  }
+
+  document.getElementById('loader').classList.add('show');
+
+  const fd = new FormData();
+  fd.append('primary', JSON.stringify(primary));
+  if (friendRec) fd.append('friend', JSON.stringify(friendRec));
+
+  fetch(SCRIPT_URL, { method:'POST', body:fd })
+    .then(() => afterSubmit(primary.name, code, phone))
+    .catch(() => afterSubmit(primary.name, code, phone));
+}
+
+function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+function afterSubmit(name, code, phone) {
+  phones.push(phone);
+  localStorage.setItem('mati_phones', JSON.stringify(phones));
+  localStorage.setItem('mati_count', String(count));
+  document.getElementById('loader').classList.remove('show');
+  // Pre-fill result screen
+  document.getElementById('rName').textContent = (name.split(' ')[0] || name) + '!';
+  document.getElementById('rCode').textContent = code;
+  // Draw wheel, go to wheel screen
+  drawWheel(0);
+  wheelSpun = false;
+  document.getElementById('spinBtn').disabled = false;
+  document.getElementById('spinBtn').textContent = '🎡 Spin!';
+  goTo('s-wheel');
+}
+
+// ═══════════════════════════════════
+// WHEEL
+// ═══════════════════════════════════
+const N = 10;
+const ARC = (2 * Math.PI) / N;
+let wheelAngle = 0;
+let spinning = false;
+
+function drawWheel(angle) {
+  const cv = document.getElementById('wheelCanvas');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const cx = W/2, cy = H/2, R = W/2 - 4;
+  ctx.clearRect(0,0,W,H);
+
+  const sliceColors = [
+    '#E8181B','#2c2c2c','#c0392b','#3a3a3a','#a93226',
+    '#2c2c2c','#E8181B','#3a3a3a','#c0392b','#2c2c2c'
+  ];
+
+  SLICES.forEach((prizeIdx, i) => {
+    const start = angle + i * ARC - Math.PI/2;
+    const end   = start + ARC;
+    // Slice
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,start,end);
+    ctx.closePath();
+    ctx.fillStyle = sliceColors[i];
+    ctx.fill();
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Emoji
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(start + ARC/2);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `${W*0.072}px serif`;
+    ctx.fillText(PRIZE_EMOJIS[prizeIdx], R*0.62, 0);
+    // Label
+    ctx.font = `bold ${W*0.038}px Barlow,sans-serif`;
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 4;
+    const words = PRIZES[prizeIdx].split(' ');
+    if (words.length === 1) {
+      ctx.fillText(words[0], R*0.35, 0);
+    } else {
+      ctx.fillText(words[0], R*0.35, -7);
+      ctx.fillText(words[1], R*0.35, 7);
+    }
+    ctx.restore();
+  });
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(cx,cy,R,0,2*Math.PI);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function pickWinner() {
+  const w = WEIGHTS[interest] || WEIGHTS.training;
+  const pool = [];
+  SLICES.forEach((prizeIdx, sliceIdx) => {
+    const wt = w[prizeIdx] || 0;
+    for (let i=0; i<wt; i++) pool.push(sliceIdx);
+  });
+  // If pool is empty (shouldn't happen), pick random
+  if (!pool.length) return Math.floor(Math.random() * N);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function spinWheel() {
+  if (spinning || wheelSpun) return;
+  spinning = true;
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('spinBtn').textContent = 'Spinning…';
+
+  const targetSlice = pickWinner();
+  wonPrize = PRIZES[SLICES[targetSlice]];
+
+  // Angle so targetSlice lands at top (pointer)
+  // Slice i centre is at: angle + i*ARC + ARC/2 - PI/2
+  // We want that = -PI/2 (top), so angle = -i*ARC - ARC/2
+  const targetAngle = -(targetSlice * ARC + ARC/2);
+  const fullSpins = (5 + Math.floor(Math.random()*3)) * 2 * Math.PI;
+  const finalAngle = targetAngle + fullSpins;
+
+  const duration = 4000;
+  const start = performance.now();
+  const startAngle = wheelAngle;
+
+  function easeOut(t) { return 1 - Math.pow(1-t, 4); }
+
+  function animate(now) {
+    const t = Math.min((now - start) / duration, 1);
+    wheelAngle = startAngle + (finalAngle - startAngle) * easeOut(t);
+    drawWheel(wheelAngle);
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      wheelAngle = targetAngle % (2*Math.PI);
+      spinning = false;
+      wheelSpun = true;
+      showResult();
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+function showResult() {
+  document.getElementById('rPrize').textContent = PRIZE_EMOJIS[PRIZES.indexOf(wonPrize)] + ' ' + wonPrize;
+  goTo('s-result');
+  launchConfetti();
+}
+
+// ═══════════════════════════════════
+// CONFETTI
+// ═══════════════════════════════════
+function launchConfetti() {
+  const cv = document.getElementById('confetti');
+  const ctx = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const cols = ['#E8181B','#fff','#ff6666','#ffcccc','#cc0000','#FCD116','#0038A8'];
+  const ps = Array.from({length:90}, () => ({
+    x: Math.random()*cv.width, y: -10-Math.random()*60,
+    r: 3+Math.random()*5, c: cols[Math.random()*cols.length|0],
+    vx:(Math.random()-.5)*2.5, vy:2+Math.random()*3,
+    va:(Math.random()-.5)*.15, a:Math.random()*Math.PI*2
+  }));
+  let f=0;
+  (function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a);
+      ctx.fillStyle=p.c; ctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);
+      ctx.restore();
+      p.x+=p.vx; p.y+=p.vy; p.a+=p.va; p.vy+=.04;
+    });
+    if(++f<180) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+// ═══════════════════════════════════
+// RESET
+// ═══════════════════════════════════
+function resetApp() {
+  who=''; mode=''; interest=''; wheelSpun=false; wheelAngle=0; wonPrize='';
+  hist=[];
+  // Reset interest buttons
+  document.getElementById('ib-pathway').classList.remove('active');
+  document.getElementById('ib-training').classList.remove('active');
+  const nb = document.getElementById('interest-next-btn');
+  nb.style.opacity='.4'; nb.style.pointerEvents='none';
+  // Clear all inputs
+  document.querySelectorAll('.finp').forEach(el => el.value='');
+  document.querySelectorAll('.fsel').forEach(el => el.value='');
+  document.getElementById('f-consent').checked = true;
+  document.getElementById('f-raffle').checked = true;
+  document.getElementById('blk-parent-details').style.display='none';
+  // Navigate home
+  const cur = document.querySelector('.screen.active');
+  if (cur) { cur.classList.add('exit'); setTimeout(()=>cur.classList.remove('active','exit'),300); }
+  const home = document.getElementById('s-welcome');
+  home.classList.add('active');
+  home.querySelectorAll('.anim').forEach(el=>{ el.style.animation='none'; el.offsetHeight; el.style.animation=''; });
+  document.getElementById('backBtn').classList.remove('show');
+}
+
+// Draw wheel on load
+window.addEventListener('load', () => drawWheel(0));
+</script>
+</body>
+</html>

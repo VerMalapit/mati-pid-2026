@@ -928,45 +928,89 @@ function submitForm() {
   const code = `MATI-${new Date().getFullYear()}-${String(count).padStart(4,'0')}`;
   const ts = new Date().toISOString();
 
-  // Build primary record
+  // Build primary record using universal column structure:
+  // enrollee first → guardian → referrer → admin fields
   const primary = { timestamp:ts, raffleCode:code, who, mode, interest };
-  // Build friend record (if referral)
   let friendRec = null;
 
   if (who==='self' && mode==='self') {
-    primary.name    = g('s-name');
-    primary.email   = g('s-email');
-    primary.phone   = g('s-phone');
-    primary.year    = g('s-year');
-    primary.prog    = g('s-prog');
+    // Enrollee = the individual themselves
+    primary.enrolleeName  = g('s-name');
+    primary.enrolleeEmail = g('s-email');
+    primary.enrolleePhone = g('s-phone');
+    primary.enrolleeYear  = g('s-year');
+    primary.programme     = g('s-prog');
+    // Guardian = parent (only for Grade 10-12)
     const yr = g('s-year');
     if (['Grade 10','Grade 11','Grade 12'].includes(yr)) {
-      primary.parentName  = g('s-pname');
-      primary.parentPhone = g('s-pphone');
-      primary.parentEmail = g('s-pemail');
+      primary.guardianName  = g('s-pname');
+      primary.guardianPhone = g('s-pphone');
+      primary.guardianEmail = g('s-pemail');
+    } else {
+      primary.guardianName  = '';
+      primary.guardianPhone = '';
+      primary.guardianEmail = '';
     }
+    primary.referrerName  = '';
+    primary.referrerPhone = '';
+    primary.referrerEmail = '';
   }
+
   if (who==='self' && mode==='ref') {
-    primary.name  = g('r-name');
-    primary.email = g('r-email');
-    primary.phone = g('r-phone');
+    // Enrollee = the friend being referred
+    primary.enrolleeName  = g('rf-name');
+    primary.enrolleeEmail = g('rf-email');
+    primary.enrolleePhone = g('rf-phone');
+    primary.enrolleeYear  = g('rf-year');
+    primary.programme     = g('rf-prog');
+    // No guardian for referred friend
+    primary.guardianName  = '';
+    primary.guardianPhone = '';
+    primary.guardianEmail = '';
+    // Referrer = the individual filling the form
+    primary.referrerName  = g('r-name');
+    primary.referrerPhone = g('r-phone');
+    primary.referrerEmail = g('r-email');
+    // Referrer also gets their own lead row
     friendRec = { timestamp:ts, source:'referral', referrer:g('r-name'),
+      referrerPhone:g('r-phone'), referrerEmail:g('r-email'),
       name:g('rf-name'), email:g('rf-email'), phone:g('rf-phone'),
       year:g('rf-year'), prog:g('rf-prog') };
   }
+
   if (who==='parent' && mode==='self') {
-    primary.name      = g('p-name');
-    primary.phone     = g('p-phone');
-    primary.email     = g('p-email');
-    primary.childName = g('p-cname');
-    primary.childYear = g('p-cyear');
-    primary.prog      = g('p-prog');
+    // Enrollee = the child
+    primary.enrolleeName  = g('p-cname');
+    primary.enrolleeEmail = '';
+    primary.enrolleePhone = '';
+    primary.enrolleeYear  = g('p-cyear');
+    primary.programme     = g('p-prog');
+    // Guardian = the parent
+    primary.guardianName  = g('p-name');
+    primary.guardianPhone = g('p-phone');
+    primary.guardianEmail = g('p-email');
+    primary.referrerName  = '';
+    primary.referrerPhone = '';
+    primary.referrerEmail = '';
   }
+
   if (who==='parent' && mode==='ref') {
-    primary.name  = g('pr-name');
-    primary.phone = g('pr-phone');
-    primary.email = g('pr-email');
+    // Enrollee = the friend's child
+    primary.enrolleeName  = g('prf-cname');
+    primary.enrolleeEmail = g('prf-cemail');
+    primary.enrolleePhone = g('prf-cphone');
+    primary.enrolleeYear  = g('prf-cyear');
+    primary.programme     = g('prf-prog');
+    // No separate guardian for friend's child
+    primary.guardianName  = '';
+    primary.guardianPhone = '';
+    primary.guardianEmail = '';
+    // Referrer = the parent filling the form
+    primary.referrerName  = g('pr-name');
+    primary.referrerPhone = g('pr-phone');
+    primary.referrerEmail = g('pr-email');
     friendRec = { timestamp:ts, source:'parent-referral', referrer:g('pr-name'),
+      referrerPhone:g('pr-phone'), referrerEmail:g('pr-email'),
       name:g('prf-cname'), email:g('prf-cemail'), phone:g('prf-cphone'),
       year:g('prf-cyear'), prog:g('prf-prog') };
   }
@@ -979,8 +1023,8 @@ function submitForm() {
   fd.append('token', SECRET_TOKEN);
 
   fetch(SCRIPT_URL, { method:'POST', body:fd, mode:'no-cors' })
-    .then(() => afterSubmit(primary.name, code, phone))
-    .catch(() => afterSubmit(primary.name, code, phone));
+    .then(() => afterSubmit(primary.enrolleeName || primary.referrerName, code, phone))
+    .catch(() => afterSubmit(primary.enrolleeName || primary.referrerName, code, phone));
 }
 
 function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }

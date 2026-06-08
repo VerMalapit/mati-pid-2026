@@ -924,8 +924,9 @@ function submitForm() {
   ok &= vCheck('f-consent','e-consent');
   if (!ok) return;
 
+  // Raffle code is now generated server-side
+  // count kept locally only as fallback
   count++;
-  const code = `MATI-${new Date().getFullYear()}-${String(count).padStart(4,'0')}`;
   const ts = new Date().toISOString();
 
   // Build primary record using universal column structure:
@@ -1017,14 +1018,103 @@ function submitForm() {
 
   document.getElementById('loader').classList.add('show');
 
-  const fd = new FormData();
-  fd.append('primary', JSON.stringify(primary));
-  if (friendRec) fd.append('friend', JSON.stringify(friendRec));
-  fd.append('token', SECRET_TOKEN);
+  // Build payload — raffle code generated server-side now
+  const payload = {
+    primary: JSON.stringify(primary),
+    friend:  friendRec ? JSON.stringify(friendRec) : '',
+    token:   SECRET_TOKEN,
+    who,
+    mode
+  };
 
-  fetch(SCRIPT_URL, { method:'POST', body:fd, mode:'no-cors' })
-    .then(() => afterSubmit(primary.enrolleeName || primary.referrerName, code, phone))
-    .catch(() => afterSubmit(primary.enrolleeName || primary.referrerName, code, phone));
+  submitViaIframe(payload, function(response) {
+    if (response.status === 'ok') {
+      afterSubmit(
+        primary.enrolleeName || primary.guardianName || primary.referrerName,
+        response.raffleCode,
+        phone
+      );
+    } else if (response.status === 'duplicate') {
+      document.getElementById('loader').classList.remove('show');
+      // Show the right dupe message based on branch
+      const dupeMap = {
+        'self-self': 'dupe-s',
+        'self-ref':  'dupe-r',
+        'parent-self': 'dupe-p',
+        'parent-ref': 'dupe-pr'
+      };
+      const dupeId = dupeMap[who + '-' + mode];
+      if (dupeId) document.getElementById(dupeId).classList.add('show');
+    } else {
+      // Fallback — if script errors, still proceed so no one is left stuck
+      afterSubmit(
+        primary.enrolleeName || primary.guardianName || primary.referrerName,
+        'MATI-' + new Date().getFullYear() + '-' + String(count).padStart(4,'0'),
+        phone
+      );
+    }
+  });
+}
+
+// ── IFRAME SUBMISSION (avoids CORS, allows reading response) ──
+function submitViaIframe(payload, callback) {
+  // Create hidden iframe to receive response
+  const iframeName = 'mati_submit_frame_' + Date.now();
+  const iframe = document.createElement('iframe');
+  iframe.name = iframeName;
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  // Create hidden form
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = SCRIPT_URL;
+  form.target = iframeName;
+
+  // Append all fields
+  for (const [k, v] of Object.entries(payload)) {
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = k;
+    input.value = v;
+    form.appendChild(input);
+  }
+  document.body.appendChild(form);
+
+  // Listen for iframe load (script response arrives)
+  let responded = false;
+  iframe.onload = function() {
+    if (responded) return;
+    responded = true;
+    try {
+      const text = iframe.contentDocument
+        ? iframe.contentDocument.body.innerText
+        : iframe.contentWindow.document.body.innerText;
+      const data = JSON.parse(text);
+      callback(data);
+    } catch(err) {
+      // Parse failed — fall back gracefully
+      callback({ status: 'error', message: err.toString() });
+    }
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(form);
+      document.body.removeChild(iframe);
+    }, 1000);
+  };
+
+  // Timeout fallback after 8 seconds
+  setTimeout(() => {
+    if (!responded) {
+      responded = true;
+      callback({ status: 'timeout' });
+      setTimeout(() => {
+        try { document.body.removeChild(form); document.body.removeChild(iframe); } catch(e){}
+      }, 500);
+    }
+  }, 8000);
+
+  form.submit();
 }
 
 function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
@@ -1034,10 +1124,11 @@ function afterSubmit(name, code, phone) {
   localStorage.setItem('mati_phones', JSON.stringify(phones));
   localStorage.setItem('mati_count', String(count));
   document.getElementById('loader').classList.remove('show');
-  // Pre-fill result screen
-  document.getElementById('rName').textContent = (name.split(' ')[0] || name) + '!';
+  // Pre-fill result screen with server-generated code
+  const firstName = (name || 'Friend').split(' ')[0];
+  document.getElementById('rName').textContent = firstName + '!';
   document.getElementById('rCode').textContent = code;
-  // Draw wheel, go to wheel screen
+  // Draw wheel and go
   drawWheel(0);
   wheelSpun = false;
   document.getElementById('spinBtn').disabled = false;

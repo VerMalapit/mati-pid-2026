@@ -1077,40 +1077,48 @@ function submitViaIframe(payload, callback) {
   document.body.appendChild(form);
 
   let responded = false;
-  let loadCount = 0; // iframe fires onload once on creation (blank), once on response
 
-  iframe.onload = function() {
-    loadCount++;
-    // First load is the blank iframe — ignore it, wait for the real response
-    if (loadCount < 2) return;
+  // Timeout safety net — if no response in 10s, fall through anyway
+  const timeout = setTimeout(() => {
     if (responded) return;
     responded = true;
-    try {
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
-      const text = doc.body ? doc.body.innerText : doc.body.textContent;
-      const data = JSON.parse(text);
-      callback(data);
-    } catch(err) {
-      // Could not parse — fall through to afterSubmit anyway
-      callback({ status: 'error', message: err.toString() });
-    }
-    setTimeout(() => {
-      try { document.body.removeChild(form); document.body.removeChild(iframe); } catch(e){}
-    }, 1000);
-  };
-
-  // Timeout safety net — 10 seconds
-  setTimeout(() => {
-    if (!responded) {
-      responded = true;
-      callback({ status: 'timeout' });
-      setTimeout(() => {
-        try { document.body.removeChild(form); document.body.removeChild(iframe); } catch(e){}
-      }, 500);
-    }
+    console.warn('MATI: script timeout — proceeding with fallback code');
+    callback({ status: 'timeout' });
+    cleanup();
   }, 10000);
 
+  function cleanup() {
+    setTimeout(() => {
+      try { document.body.removeChild(form); } catch(e){}
+      try { document.body.removeChild(iframe); } catch(e){}
+    }, 500);
+  }
+
+  // Attach onload AFTER submit so it only fires for the real response
   form.submit();
+
+  // Small delay before attaching onload — ensures we don't catch the
+  // initial blank-page load that some browsers fire before the response
+  setTimeout(() => {
+    iframe.onload = function() {
+      if (responded) return;
+      responded = true;
+      clearTimeout(timeout);
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const raw = (doc.body.innerText || doc.body.textContent || '').trim();
+        // Strip any HTML tags in case the response is wrapped
+        const json = raw.replace(/<[^>]+>/g, '').trim();
+        const data = JSON.parse(json);
+        console.log('MATI response:', data);
+        callback(data);
+      } catch(err) {
+        console.warn('MATI: parse error —', err.toString());
+        callback({ status: 'error', message: err.toString() });
+      }
+      cleanup();
+    };
+  }, 200);
 }
 
 function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }

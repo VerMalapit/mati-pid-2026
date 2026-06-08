@@ -981,7 +981,8 @@ function submitForm() {
   const fd = new FormData();
   fd.append('primary', JSON.stringify(primary));
   if (friendRec) fd.append('friend', JSON.stringify(friendRec));
-
+  
+  fd.append('token', SECRET_TOKEN);
   fetch(SCRIPT_URL, { method:'POST', body:fd })
     .then(() => afterSubmit(primary.name, code, phone))
     .catch(() => afterSubmit(primary.name, code, phone));
